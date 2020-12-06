@@ -1,26 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
 import './App.css';
+import Amplify from 'aws-amplify';
+import { AmplifyAuthenticator, AmplifySignOut, AmplifySignIn } from '@aws-amplify/ui-react';
+import { AuthState, onAuthUIStateChange } from '@aws-amplify/ui-components';
+import { awsconfig } from './constants/aws-exports';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+Amplify.configure(awsconfig);
+
+const AuthStateApp = () => {
+    const [authState, setAuthState] = useState<AuthState>();
+    const [user, setUser] = useState<object>();
+
+    useEffect(() => {
+        return onAuthUIStateChange((nextAuthState, authData) => {
+            setAuthState(nextAuthState);
+            setUser(authData);
+        });
+    }, []);
+
+  return authState === AuthState.SignedIn && user ? (
+      <div className="App">
+          <div>Hello, {(user as any).username}</div>
+          <AmplifySignOut />
+      </div>
+    ) : (
+      <AmplifyAuthenticator>
+        <AmplifySignIn
+          headerText="サインイン"
+          slot="sign-in"
+          hideSignUp={true}
+          submitButtonText="サインイン"
+        ></AmplifySignIn>
+      </AmplifyAuthenticator>
   );
 }
 
-export default App;
+export default AuthStateApp;
